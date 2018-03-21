@@ -2,25 +2,24 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
 	"time"
+
+	"github.com/kataras/iris"
 )
 
-const port = ":8080"
+var addr = iris.Addr("localhost:8080")
 
-func serveHello(w http.ResponseWriter, r *http.Request) {
-	message := r.URL.Path
-	message = strings.TrimPrefix(message, "/")
-	message = "Hello " + message
-	fmt.Printf("%v : Page Served! %v\n", time.Now(), r.URL.Path)
-	w.Write([]byte(message))
+func serveHello(ctx iris.Context) {
+	ctx.ViewData("Message", "Hello World!")
+	ctx.View("index.html")
+	fmt.Printf("%v : Served Page /", time.Now())
 }
 func main() {
-	http.HandleFunc("/", serveHello)
-	fmt.Printf("%v : Server started on %v", time.Now(), port)
-	if err := http.ListenAndServe(port, nil); err != nil {
-		panic(err)
-	}
+	app := iris.New()
+
+	app.RegisterView(iris.Django("./templates", ".html").Reload(true))
+	app.Get("/", serveHello)
+	app.Run(addr)
+	fmt.Printf("%v : Server started on %v", time.Now(), addr)
 	fmt.Println("Exited, see you soon!")
 }
